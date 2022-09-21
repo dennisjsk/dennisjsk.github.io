@@ -40,7 +40,7 @@ div.sticky {
 }
 
 .profilepic{
-    background-image: url('res/me.png');
+    /* background-image: url('res/me.png'); */
     background-size: 25em;
     background-repeat: no-repeat;
     background-position: 100%;
