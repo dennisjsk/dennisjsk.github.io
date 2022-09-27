@@ -6,8 +6,6 @@
         <meta http-equiv='X-UA-Compatible' content='IE=edge'>
         <title>Page Title</title>
         <meta name='viewport' content='width=device-width, initial-scale=1'>
-        <!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'> -->
-        <!-- <script src='main.js'></script> -->
         <style>
             input[type=text], textarea {
                 width: 100%;
@@ -33,7 +31,7 @@
 
         <form action="https://test.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8" method="POST">
 
-            <input type=hidden name="oid" value="00D1j000000FqbO">
+            <input type=hidden name="oid" value="00D90000000vAwS">
             <input type=hidden name="retURL" value="https://www.koenig-bauer.com/">
 
             <!--  ----------------------------------------------------------------------  -->
@@ -55,6 +53,10 @@
             <label for="company">Firma</label><input id="company" maxlength="40" name="company" size="20" type="text" /><br>
 
             <label for="description">Beschreibung</label><textarea name="description"></textarea><br>
+
+            <input type="hidden" name="Campaign_ID" value="7012v0000034PhqAAE" />
+
+            <input type="hidden" name="member_status" value="Sent" />
 
             <input type="submit" name="submit" value="Absenden">
 
