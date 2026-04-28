@@ -1,6 +1,26 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: #f5f5dc;
+  background-image:
+    url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E"),
+    linear-gradient(to bottom, #f5f5dc, #ede8d8);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 1rem;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
 .container {
-  width: 340px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 500px;
   height: calc(100vh - 2rem);
   background: #fefefe;
   border-radius: 12px;
@@ -11,11 +31,21 @@
   border: 1px solid #c0b8a0;
   display: flex;
   flex-direction: column;
+  margin: 0 auto;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 767px) {
   .container {
-    width: 500px;
+    max-width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    margin: 0;
+  }
+  body {
+    padding: 0;
+    align-items: stretch;
   }
 }
 
@@ -116,6 +146,8 @@
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
   outline: none;
   min-height: 44px;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 #todo-input:focus {
@@ -160,6 +192,8 @@ button::-moz-focus-inner {
   padding: 0.5rem 0.6rem;
   background: #f5f5f0;
   border-bottom: 1px solid #e8e4d8;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 #search-input {
@@ -171,6 +205,7 @@ button::-moz-focus-inner {
   background: white;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
   outline: none;
+  box-sizing: border-box;
 }
 
 #search-input:focus {
@@ -596,18 +631,5 @@ button::-moz-focus-inner {
   }
   .action-btn {
     display: none;
-  }
-}
-
-@media (max-width: 400px) {
-  body {
-    padding-top: 0;
-  }
-  .container {
-    width: 100%;
-    height: 100vh;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
   }
 }
