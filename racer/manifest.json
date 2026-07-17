@@ -1,6 +1,6 @@
 {
-  "name": "8-Bit Racer",
-  "short_name": "Racer",
+  "name": "Autobahn Racer",
+  "short_name": "Autobahn",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#111",

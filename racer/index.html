@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
-<title>8-Bit Racer</title>
+<title>Autobahn Racer</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #111; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: monospace; }
@@ -39,7 +39,7 @@
 
 <div id="startOverlay" class="menu-overlay">
   <div class="menu-box">
-    <h1>8-BIT RACER</h1>
+    <h1>AUTOBAHN RACER</h1>
     <p>ARROWS: UP/DOWN STEER LEFT/RIGHT BRAKE</p>
     <p>P = PAUSE | H = HORN</p>
     <button id="startBtn">START</button>
@@ -409,10 +409,10 @@ function drawCountdown() {
   ctx.fillText('ARROW KEYS: UP/DOWN/LEFT/RIGHT', W/2, H/2 + 90);
   ctx.fillStyle = '#e74c3c';
   ctx.font = 'bold 36px monospace';
-  ctx.fillText('8-BIT RACER', W/2, 60);
+  ctx.fillText('AUTOBAHN RACER', W/2, 60);
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 3;
-  ctx.strokeText('8-BIT RACER', W/2, 60);
+  ctx.strokeText('AUTOBAHN RACER', W/2, 60);
 }
 
 function drawGameOverScreen() {

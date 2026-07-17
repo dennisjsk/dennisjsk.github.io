@@ -1,4 +1,4 @@
-const CACHE_NAME = '8bit-racer-v1';
+const CACHE_NAME = 'autobahn-racer-v1';
 const ASSETS = ['/', './', 'index.html', 'manifest.json', 'favicon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
