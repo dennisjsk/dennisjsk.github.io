@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
 <title>8-Bit Racer</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -313,17 +318,17 @@ function drawRoad() {
 }
 
 function drawHUD() {
-  let hudH = 56;
+  let hudH = 72;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fillRect(0, 0, W, hudH);
 
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 14px monospace';
   ctx.textAlign = 'left';
-  ctx.fillText('SCORE: ' + Math.floor(score), 12, 16);
+  ctx.fillText('SCORE: ' + Math.floor(score), 12, 18);
 
   for (let i = 0; i < lives; i++) {
-    drawSpanner(16 + i * 22, 34, 0.7);
+    drawSpanner(16 + i * 22, 40, 0.7);
   }
 
   if (wantedLevel > 0) {
@@ -334,28 +339,28 @@ function drawHUD() {
     for (let s = 0; s < wantedLevel; s++) {
       starsText += '\u2605';
     }
-    ctx.fillText(starsText, 12, 48);
+    ctx.fillText(starsText, 12, 58);
   }
 
   let distText = distance >= 1000 ? (distance / 1000).toFixed(1) + ' km' : Math.floor(distance) + 'm';
   ctx.textAlign = 'right';
   ctx.fillStyle = '#fff';
-  ctx.fillText(distText, W - 70, 16);
+  ctx.fillText(distText, W - 70, 18);
 
   ctx.fillStyle = '#f1c40f';
   ctx.font = 'bold 12px monospace';
-  ctx.fillText('LVL ' + level, W - 10, 16);
+  ctx.fillText('LVL ' + level, W - 10, 18);
 
   let speedKmh = Math.round((speed / MAX_SPEED) * 300);
   ctx.fillStyle = '#2ecc71';
   ctx.font = 'bold 14px monospace';
   ctx.textAlign = 'right';
-  ctx.fillText(speedKmh + ' km/h', W - 10, 34);
+  ctx.fillText(speedKmh + ' km/h', W - 10, 38);
 
   let barW = 100;
   let barH = 8;
   let barX = W - barW - 10;
-  let barY = 42;
+  let barY = 46;
   ctx.fillStyle = '#333';
   ctx.fillRect(barX, barY, barW, barH);
   let pct = (speed - BASE_SPEED) / (MAX_SPEED - BASE_SPEED);
@@ -1014,6 +1019,10 @@ document.getElementById('restartBtn').addEventListener('click', restartGame);
 document.getElementById('backBtn').addEventListener('click', () => {
   showOverlay('startOverlay');
 });
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').then(() => console.log('SW registered'));
+}
 
 showOverlay('startOverlay');
 gameLoop();
