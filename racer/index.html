@@ -24,6 +24,12 @@
   .menu-box button:hover { background: #c0392b; }
   .menu-box button.secondary { background: #555; }
   .menu-box button.secondary:hover { background: #777; }
+  .touch-controls { display: none; position: absolute; bottom: 10px; left: 0; width: 100%; justify-content: space-between; padding: 0 20px; z-index: 5; }
+  .touch-controls.visible { display: flex; }
+  .touch-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 70px; height: 60px; font-size: 24px; border-radius: 10px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  .touch-btn:active { background: rgba(255,255,255,0.35); }
+  .touch-btn.horn-btn { background: rgba(231,76,60,0.4); border-color: rgba(231,76,60,0.6); font-size: 18px; }
+  .touch-btn.horn-btn:active { background: rgba(231,76,60,0.7); }
   .hof-list { list-style: none; padding: 0; margin: 10px 0; text-align: left; }
   .hof-list li { color: #fff; font-size: 14px; padding: 4px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
   .hof-list li span.rank { color: #f1c40f; width: 30px; }
@@ -36,6 +42,13 @@
 <body>
 <canvas id="game"></canvas>
 <div id="pauseText" class="pause-text">PAUSED</div>
+
+<div class="touch-controls" id="touchControls">
+  <button class="touch-btn" id="btnLeft">&#9664;</button>
+  <button class="touch-btn" id="btnStop">&#9632;</button>
+  <button class="touch-btn horn-btn" id="btnHorn">&#128227;</button>
+  <button class="touch-btn" id="btnRight">&#9654;</button>
+</div>
 
 <div id="startOverlay" class="menu-overlay">
   <div class="menu-box">
@@ -56,6 +69,7 @@
       <input id="playerName" type="text" maxlength="15" placeholder="Your name...">
       <br>
       <button id="saveScoreBtn">SAVE SCORE</button>
+      <button id="skipSaveBtn" class="secondary">SKIP</button>
     </div>
     <div id="savedMsg" style="display:none;">
       <p style="color:#2ecc71;">SCORE SAVED!</p>
@@ -158,7 +172,6 @@ function spawnTraffic() {
 function spawnPickup() {
   let lane = Math.floor(Math.random() * LANE_COUNT);
   let tooClose = pickups.some(p => p.lane === lane && p.y < 100);
-  tooClose = tooClose || trafficCars.some(c => c.lane === lane && c.y < 100);
   if (tooClose) return;
   pickups.push({
     lane: lane,
@@ -573,7 +586,7 @@ function update() {
 
   if (invincibleTimer > 0) invincibleTimer--;
 
-  level = Math.floor(distance / 10000) + 1;
+  level = Math.floor(distance / 5000) + 1;
   let trafficMultiplier = Math.max(1, Math.ceil(level / 2));
   trafficInterval = Math.max(25, 120 - (level - 1) * 8);
   trafficTimer++;
@@ -584,9 +597,9 @@ function update() {
     }
   }
 
-  if (level >= 10) {
+  if (level >= 3) {
     oilTimer++;
-    if (oilTimer >= 180 - Math.min(level * 5, 90)) {
+    if (oilTimer >= 240 - Math.min(level * 8, 120)) {
       oilTimer = 0;
       let oilLane = Math.floor(Math.random() * LANE_COUNT);
       oilSpills.push({
@@ -623,9 +636,9 @@ function update() {
   if (hornCooldown > 0) hornCooldown--;
 
   if (keys['h'] || keys['H']) {
-    if (!hornActive && hornCooldown <= 0) {
-      hornActive = true;
-      hornTimer = 15;
+    hornActive = true;
+    hornTimer = 15;
+    if (hornCooldown <= 0) {
       hornCooldown = 45;
     }
   } else {
@@ -657,6 +670,8 @@ function update() {
     }
   }
 
+  pickupTimer++;
+
   if (copCar) {
     copCar.y += speed - copCar.speed;
     let dx = playerX - copCar.x;
@@ -668,7 +683,7 @@ function update() {
       copCar = null;
     }
 
-    if (!copCar.hitPlayer && checkCollision(playerX, playerY, copCar.x, copCar.y)) {
+    if (copCar && !copCar.hitPlayer && checkCollision(playerX, playerY, copCar.x, copCar.y)) {
       skidTimer = 90;
       skidSteerFactor = 0.15;
       createExplosion(copCar.x, copCar.y);
@@ -776,23 +791,15 @@ function update() {
         createExplosion(c.x, carFront);
       } else if (invincibleTimer <= 0) {
         let speedKmh = Math.round((speed / MAX_SPEED) * 300);
-        if (speedKmh < 60) {
+        if (speedKmh < 100) {
           c.speed = 0;
           createExplosion(c.x, carFront);
         } else {
           wantedLevel = Math.min(3, wantedLevel + 1);
-          let prevLives = lives;
           lives--;
           createExplosion(playerX, playerY);
           shakeTimer = 15;
           shakeIntensity = 6;
-          if (prevLives !== lives) {
-            wantedLevel = 0;
-            copCar = null;
-          }
-          if (wantedLevel <= 0) {
-            copCar = null;
-          }
           if (lives <= 0) {
             state = 'gameover';
             showOverlay('gameOverOverlay');
@@ -948,6 +955,11 @@ function saveScore() {
   document.getElementById('savedMsg').style.display = 'block';
 }
 
+function skipSaveScore() {
+  document.getElementById('nameInputBox').style.display = 'none';
+  document.getElementById('savedMsg').style.display = 'block';
+}
+
 function startGame() {
   showOverlay(null);
   document.getElementById('pauseText').classList.remove('visible');
@@ -1015,6 +1027,7 @@ document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('hofBtn').addEventListener('click', showHallOfFame);
 document.getElementById('hofBtn2').addEventListener('click', showHallOfFame);
 document.getElementById('saveScoreBtn').addEventListener('click', saveScore);
+document.getElementById('skipSaveBtn').addEventListener('click', skipSaveScore);
 document.getElementById('restartBtn').addEventListener('click', restartGame);
 document.getElementById('backBtn').addEventListener('click', () => {
   showOverlay('startOverlay');
@@ -1023,6 +1036,26 @@ document.getElementById('backBtn').addEventListener('click', () => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').then(() => console.log('SW registered'));
 }
+
+let isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || ('ontouchstart' in window);
+if (isMobile) {
+  document.getElementById('touchControls').classList.add('visible');
+}
+
+function addTouchBtn(id, key) {
+  let btn = document.getElementById(id);
+  if (!btn) return;
+  btn.addEventListener('touchstart', e => { e.preventDefault(); keys[key] = true; });
+  btn.addEventListener('touchend', e => { e.preventDefault(); keys[key] = false; });
+  btn.addEventListener('mousedown', e => { e.preventDefault(); keys[key] = true; });
+  btn.addEventListener('mouseup', e => { e.preventDefault(); keys[key] = false; });
+  btn.addEventListener('mouseleave', e => { keys[key] = false; });
+}
+
+addTouchBtn('btnLeft', 'ArrowLeft');
+addTouchBtn('btnRight', 'ArrowRight');
+addTouchBtn('btnStop', 'ArrowDown');
+addTouchBtn('btnHorn', 'h');
 
 showOverlay('startOverlay');
 gameLoop();
