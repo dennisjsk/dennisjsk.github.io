@@ -12,7 +12,8 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #111; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: monospace; }
-  canvas { image-rendering: pixelated; image-rendering: crisp-edges; border: 4px solid #333; }
+  .game-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; border: 4px solid #333; max-height: calc(100vh - 100px); max-width: calc(100vw - 8px); width: auto; }
   .menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 10; }
   .menu-overlay.hidden { display: none; }
   .menu-box { background: rgba(0,0,0,0.92); border: 3px solid #f1c40f; padding: 30px 40px; text-align: center; border-radius: 4px; max-height: 80vh; overflow-y: auto; }
@@ -24,9 +25,9 @@
   .menu-box button:hover { background: #c0392b; }
   .menu-box button.secondary { background: #555; }
   .menu-box button.secondary:hover { background: #777; }
-  .touch-controls { display: none; position: absolute; bottom: 10px; left: 0; width: 100%; justify-content: space-between; padding: 0 20px; z-index: 5; }
+  .touch-controls { display: none; flex-direction: row; justify-content: center; gap: 12px; padding: 8px 0; z-index: 5; }
   .touch-controls.visible { display: flex; }
-  .touch-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 70px; height: 60px; font-size: 24px; border-radius: 10px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  .touch-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 64px; height: 56px; font-size: 22px; border-radius: 10px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
   .touch-btn:active { background: rgba(255,255,255,0.35); }
   .touch-btn.horn-btn { background: rgba(231,76,60,0.4); border-color: rgba(231,76,60,0.6); font-size: 18px; }
   .touch-btn.horn-btn:active { background: rgba(231,76,60,0.7); }
@@ -40,15 +41,16 @@
 </style>
 </head>
 <body>
-<canvas id="game"></canvas>
-<div id="pauseText" class="pause-text">PAUSED</div>
-
-<div class="touch-controls" id="touchControls">
-  <button class="touch-btn" id="btnLeft">&#9664;</button>
-  <button class="touch-btn" id="btnStop">&#9632;</button>
-  <button class="touch-btn horn-btn" id="btnHorn">&#128227;</button>
-  <button class="touch-btn" id="btnRight">&#9654;</button>
+<div class="game-wrapper" id="gameWrapper">
+  <canvas id="game"></canvas>
+  <div class="touch-controls" id="touchControls">
+    <button class="touch-btn" id="btnLeft">&#9664;</button>
+    <button class="touch-btn" id="btnStop">&#9632;</button>
+    <button class="touch-btn horn-btn" id="btnHorn">&#128227;</button>
+    <button class="touch-btn" id="btnRight">&#9654;</button>
+  </div>
 </div>
+<div id="pauseText" class="pause-text">PAUSED</div>
 
 <div id="startOverlay" class="menu-overlay">
   <div class="menu-box">
@@ -95,6 +97,45 @@ const W = 400;
 const H = 600;
 canvas.width = W;
 canvas.height = H;
+
+const offCanvas = document.createElement('canvas');
+offCanvas.width = W;
+offCanvas.height = H;
+const offCtx = offCanvas.getContext('2d');
+let roadDirty = true;
+
+function prerenderRoad() {
+  let c = offCtx;
+  c.fillStyle = '#2d5a1b';
+  c.fillRect(0, 0, W, H);
+
+  c.fillStyle = '#347a1f';
+  for (let y = 0; y < H; y += 40) {
+    c.fillRect(0, y, ROAD_LEFT, 4);
+    c.fillRect(ROAD_RIGHT, y, W - ROAD_RIGHT, 4);
+  }
+
+  c.fillStyle = '#444';
+  c.fillRect(ROAD_LEFT, 0, ROAD_WIDTH, H);
+
+  c.fillStyle = '#fff';
+  c.fillRect(ROAD_LEFT, 0, 4, H);
+  c.fillRect(ROAD_RIGHT - 4, 0, 4, H);
+
+  c.fillStyle = '#e74c3c';
+  for (let y = 0; y < H; y += 40) {
+    c.fillRect(ROAD_LEFT + 4, y, 8, 15);
+    c.fillRect(ROAD_RIGHT - 12, y, 8, 15);
+  }
+
+  c.fillStyle = '#fff';
+  for (let i = 1; i < LANE_COUNT; i++) {
+    let lx = ROAD_LEFT + i * LANE_WIDTH;
+    c.fillRect(lx - 1, 0, 3, 20);
+  }
+
+  roadDirty = false;
+}
 
 const LANE_COUNT = 4;
 const ROAD_LEFT = 80;
@@ -299,32 +340,13 @@ function drawSpanner(x, y, size) {
 }
 
 function drawRoad() {
-  ctx.fillStyle = '#2d5a1b';
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.fillStyle = '#347a1f';
-  for (let y = (roadOffset * 0.5) % 40 - 40; y < H; y += 40) {
-    ctx.fillRect(0, y, ROAD_LEFT, 4);
-    ctx.fillRect(ROAD_RIGHT, y, W - ROAD_RIGHT, 4);
-  }
-
-  ctx.fillStyle = '#444';
-  ctx.fillRect(ROAD_LEFT, 0, ROAD_WIDTH, H);
-
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(ROAD_LEFT, 0, 4, H);
-  ctx.fillRect(ROAD_RIGHT - 4, 0, 4, H);
-
-  ctx.fillStyle = '#e74c3c';
-  for (let y = roadOffset % 30 - 30; y < H; y += 30) {
-    ctx.fillRect(ROAD_LEFT + 4, y, 8, 15);
-    ctx.fillRect(ROAD_RIGHT - 12, y, 8, 15);
-  }
+  if (roadDirty) prerenderRoad();
+  ctx.drawImage(offCanvas, 0, 0);
 
   ctx.fillStyle = '#fff';
   for (let i = 1; i < LANE_COUNT; i++) {
     let lx = ROAD_LEFT + i * LANE_WIDTH;
-    for (let y = (roadOffset * speed) % 40 - 40; y < H; y += 40) {
+    for (let y = (roadOffset * speed) % 60 - 60; y < H; y += 60) {
       ctx.fillRect(lx - 1, y, 3, 20);
     }
   }
@@ -475,7 +497,8 @@ function drawCrash() {
 
 function createExplosion(x, y) {
   let colors = ['#e74c3c', '#f39c12', '#f1c40f', '#ff6600', '#fff'];
-  for (let i = 0; i < 50; i++) {
+  let count = isMobile ? 25 : 50;
+  for (let i = 0; i < count; i++) {
     particles.push({
       x: x,
       y: y,
@@ -821,6 +844,7 @@ function update() {
     p.life--;
     if (p.life <= 0) particles.splice(i, 1);
   }
+  while (particles.length > (isMobile ? 80 : 200)) particles.shift();
 }
 
 function draw() {
@@ -1039,6 +1063,7 @@ if ('serviceWorker' in navigator) {
 
 let isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || ('ontouchstart' in window);
 if (isMobile) {
+  document.getElementById('gameWrapper').classList.add('visible');
   document.getElementById('touchControls').classList.add('visible');
 }
 
