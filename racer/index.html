@@ -25,9 +25,10 @@
   .menu-box button:hover { background: #c0392b; }
   .menu-box button.secondary { background: #555; }
   .menu-box button.secondary:hover { background: #777; }
-  .touch-controls { display: none; flex-direction: row; justify-content: center; gap: 12px; padding: 8px 0; z-index: 5; }
+  .touch-controls { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); flex-direction: column; align-items: center; gap: 8px; z-index: 6; pointer-events: none; }
   .touch-controls.visible { display: flex; }
-  .touch-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 64px; height: 56px; font-size: 22px; border-radius: 10px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+  .touch-row { display: flex; gap: 12px; justify-content: center; pointer-events: auto; }
+  .touch-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: #fff; width: 64px; height: 56px; font-size: 22px; border-radius: 10px; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; touch-action: manipulation; pointer-events: auto; }
   .touch-btn:active { background: rgba(255,255,255,0.35); }
   .touch-btn.horn-btn { background: rgba(231,76,60,0.4); border-color: rgba(231,76,60,0.6); font-size: 18px; }
   .touch-btn.horn-btn:active { background: rgba(231,76,60,0.7); }
@@ -44,10 +45,17 @@
 <div class="game-wrapper" id="gameWrapper">
   <canvas id="game"></canvas>
   <div class="touch-controls" id="touchControls">
-    <button class="touch-btn" id="btnLeft">&#9664;</button>
-    <button class="touch-btn" id="btnStop">&#9632;</button>
-    <button class="touch-btn horn-btn" id="btnHorn">&#128227;</button>
-    <button class="touch-btn" id="btnRight">&#9654;</button>
+    <div class="touch-row">
+      <button class="touch-btn" id="btnUp">&#9650;</button>
+    </div>
+    <div class="touch-row">
+      <button class="touch-btn" id="btnLeft">&#9664;</button>
+      <button class="touch-btn horn-btn" id="btnHorn">&#128227;</button>
+      <button class="touch-btn" id="btnRight">&#9654;</button>
+    </div>
+    <div class="touch-row">
+      <button class="touch-btn" id="btnDown">&#9660;</button>
+    </div>
   </div>
 </div>
 <div id="pauseText" class="pause-text">PAUSED</div>
@@ -497,7 +505,7 @@ function drawCrash() {
 
 function createExplosion(x, y) {
   let colors = ['#e74c3c', '#f39c12', '#f1c40f', '#ff6600', '#fff'];
-  let count = isMobile ? 25 : 50;
+  let count = isMobile ? 15 : 50;
   for (let i = 0; i < count; i++) {
     particles.push({
       x: x,
@@ -615,8 +623,9 @@ function update() {
   trafficTimer++;
   if (trafficTimer >= trafficInterval) {
     trafficTimer = 0;
+    let maxCars = isMobile ? 12 : 30;
     for (let m = 0; m < trafficMultiplier; m++) {
-      spawnTraffic();
+      if (trafficCars.length < maxCars) spawnTraffic();
     }
   }
 
@@ -844,7 +853,7 @@ function update() {
     p.life--;
     if (p.life <= 0) particles.splice(i, 1);
   }
-  while (particles.length > (isMobile ? 80 : 200)) particles.shift();
+  while (particles.length > (isMobile ? 50 : 200)) particles.shift();
 }
 
 function draw() {
@@ -873,12 +882,7 @@ function draw() {
 
   for (let o of oilSpills) {
     ctx.fillStyle = 'rgba(30,30,30,0.6)';
-    ctx.beginPath();
-    ctx.arc(o.x, o.y, o.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(50,50,50,0.4)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    ctx.fillRect(o.x - o.radius, o.y - o.radius * 0.6, o.radius * 2, o.radius * 1.2);
   }
 
   for (let p of pickups) {
@@ -1063,15 +1067,18 @@ if ('serviceWorker' in navigator) {
 
 let isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || ('ontouchstart' in window);
 if (isMobile) {
-  document.getElementById('gameWrapper').classList.add('visible');
   document.getElementById('touchControls').classList.add('visible');
+}
+
+function vibrate() {
+  if (navigator.vibrate) navigator.vibrate(15);
 }
 
 function addTouchBtn(id, key) {
   let btn = document.getElementById(id);
   if (!btn) return;
-  btn.addEventListener('touchstart', e => { e.preventDefault(); keys[key] = true; });
-  btn.addEventListener('touchend', e => { e.preventDefault(); keys[key] = false; });
+  btn.addEventListener('touchstart', e => { e.preventDefault(); keys[key] = true; tiltActive = true; vibrate(); });
+  btn.addEventListener('touchend', e => { e.preventDefault(); keys[key] = false; tiltActive = false; });
   btn.addEventListener('mousedown', e => { e.preventDefault(); keys[key] = true; });
   btn.addEventListener('mouseup', e => { e.preventDefault(); keys[key] = false; });
   btn.addEventListener('mouseleave', e => { keys[key] = false; });
@@ -1079,8 +1086,31 @@ function addTouchBtn(id, key) {
 
 addTouchBtn('btnLeft', 'ArrowLeft');
 addTouchBtn('btnRight', 'ArrowRight');
-addTouchBtn('btnStop', 'ArrowDown');
+addTouchBtn('btnUp', 'ArrowUp');
+addTouchBtn('btnDown', 'ArrowDown');
 addTouchBtn('btnHorn', 'h');
+
+let tiltEnabled = false;
+let tiltActive = false;
+function enableTilt() {
+  if (tiltEnabled) return;
+  tiltEnabled = true;
+  let handler = function(e) {
+    if (tiltActive) return;
+    let g = e.gamma || 0;
+    if (g < -10) { keys['ArrowLeft'] = true; keys['ArrowRight'] = false; }
+    else if (g > 10) { keys['ArrowRight'] = true; keys['ArrowLeft'] = false; }
+    else { keys['ArrowLeft'] = false; keys['ArrowRight'] = false; }
+  };
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(r => {
+      if (r === 'granted') window.addEventListener('deviceorientation', handler);
+    }).catch(() => {});
+  } else {
+    window.addEventListener('deviceorientation', handler);
+  }
+}
+if (isMobile) enableTilt();
 
 showOverlay('startOverlay');
 gameLoop();
